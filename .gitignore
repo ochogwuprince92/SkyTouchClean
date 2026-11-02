@@ -8,6 +8,9 @@
 # testing
 /coverage
 
+.env.local
+
+
 # next.js
 /.next/
 /out/
@@ -35,3 +38,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+DOCKER_JENKINS_SETUP.md
+LAUNCH_CHECKLIST_AUDIT.md
+PHASE_6_REPORT.md
+PHASES_1_2_REPORT.md
+UNVERIFIED_ITEMS.md
+VERCEL_ENV_CHECKLIST.md
+SECURITY_FIXES.md
+SECURITY_REVIEW.md
+docs
