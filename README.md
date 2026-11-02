@@ -1,10 +1,10 @@
 # SkyTouchClean
 
-**Clean Spaces. Fresh Clothes. Less Worries.**
+**We clean. We wash. We fumigate.**
 
 A full-stack web application for managing professional cleaning, laundry, and fumigation services in Lagos. Built with Next.js, MongoDB, and TypeScript.
 
-## 📋 Overview
+## Overview
 
 SkyTouchClean is a comprehensive service management platform that allows customers to book cleaning services online while providing staff with a powerful admin dashboard for order management. The platform supports three main service types:
 
@@ -67,7 +67,7 @@ SkyTouchClean is a comprehensive service management platform that allows custome
 - **Paystack** - Payment processing
 - **Resend** (optional) - Email delivery
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 SkyTouchClean/
@@ -191,7 +191,7 @@ npm run dev
 
 Visit http://localhost:3000
 
-## 📝 Available Scripts
+## Available Scripts
 
 ```bash
 # Development
@@ -215,7 +215,7 @@ npm run test:e2e:ui   # Run E2E tests with UI
 npm run test:e2e:debug # Debug E2E tests
 ```
 
-## 🔐 Security
+## Security
 
 The application implements comprehensive security measures:
 
@@ -230,7 +230,7 @@ The application implements comprehensive security measures:
 
 See [SECURITY_REVIEW.md](./SECURITY_REVIEW.md) and [SECURITY_FIXES.md](./SECURITY_FIXES.md) for detailed security analysis.
 
-## 🧪 Testing
+## Testing
 
 ### Unit Tests
 ```bash
@@ -262,7 +262,7 @@ docker run -d -p 3000:3000 \
 
 See [DOCKER_JENKINS_SETUP.md](./DOCKER_JENKINS_SETUP.md) for complete Docker documentation.
 
-## 🔄 CI/CD
+## CI/CD
 
 The project uses Jenkins for continuous integration and deployment:
 
@@ -275,7 +275,7 @@ The project uses Jenkins for continuous integration and deployment:
 
 See [Jenkinsfile](./Jenkinsfile) and [DOCKER_JENKINS_SETUP.md](./DOCKER_JENKINS_SETUP.md) for pipeline configuration.
 
-## 📊 Business Rules
+## Business Rules
 
 ### Pricing
 - **Laundry** - Priced per garment/item, not by weight
@@ -297,7 +297,7 @@ See [Jenkinsfile](./Jenkinsfile) and [DOCKER_JENKINS_SETUP.md](./DOCKER_JENKINS_
 - Address: 28 Agberin Street, Close to St Daniel Hospital, Oworo, Lagos
 - Tagline: HONESTY AND SERVICE
 
-## 📚 Documentation
+## Documentation
 
 - [AGENTS.md](./AGENTS.md) - Development guidelines and conventions
 - [SECURITY_REVIEW.md](./SECURITY_REVIEW.md) - Security analysis
@@ -308,7 +308,7 @@ See [Jenkinsfile](./Jenkinsfile) and [DOCKER_JENKINS_SETUP.md](./DOCKER_JENKINS_
 - [LAUNCH_CHECKLIST_AUDIT.md](./LAUNCH_CHECKLIST_AUDIT.md) - Pre-launch checklist
 - [VERCEL_ENV_CHECKLIST.md](./VERCEL_ENV_CHECKLIST.md) - Vercel deployment checklist
 
-## 🗺 Roadmap
+## Roadmap
 
 - [ ] Email notifications for booking updates
 - [ ] SMS notifications for status changes
@@ -318,7 +318,7 @@ See [Jenkinsfile](./Jenkinsfile) and [DOCKER_JENKINS_SETUP.md](./DOCKER_JENKINS_
 - [ ] Mobile app (React Native)
 - [ ] Real-time status updates (WebSocket)
 
-## 📄 License
+## License
 
 Proprietary - All rights reserved to SkyTouchClean.
 
