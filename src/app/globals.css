@@ -1,0 +1,30 @@
+@import "tailwindcss";
+@import "@fontsource/pacifico";
+
+@theme {
+  --font-display: "Pacifico", cursive;
+
+  --color-deep-purple: #4a148c;
+  --color-deep-purple-50: #f3e5f5;
+  --color-deep-purple-100: #e1bee7;
+  --color-deep-purple-200: #ce93d8;
+  --color-deep-purple-300: #ba68c8;
+  --color-deep-purple-400: #ab47bc;
+  --color-deep-purple-500: #9c27b0;
+  --color-deep-purple-600: #8e24aa;
+  --color-deep-purple-700: #7b1fa2;
+  --color-deep-purple-800: #6a1b9a;
+  --color-deep-purple-900: #4a148c;
+
+  --color-teal: #009688;
+  --color-teal-50: #e0f2f1;
+  --color-teal-100: #b2dfdb;
+  --color-teal-200: #80cbc4;
+  --color-teal-300: #4db6ac;
+  --color-teal-400: #26a69a;
+  --color-teal-500: #009688;
+  --color-teal-600: #00897b;
+  --color-teal-700: #00796b;
+  --color-teal-800: #00695c;
+  --color-teal-900: #004d40;
+}

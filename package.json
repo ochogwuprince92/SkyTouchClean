@@ -1,0 +1,50 @@
+{
+  "name": "skytouchclean",
+  "version": "1.0.0",
+  "description": "Improvement to the earlier specification. The agreed stack is retained, with a minimal Node.js backend using Next.js Route Handlers and Server Actions.",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "setup-indexes": "tsx scripts/setup-indexes.ts",
+    "seed": "tsx scripts/seed.ts",
+    "test-seed": "tsx scripts/test-seed.ts",
+    "test": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@fontsource/pacifico": "^5.3.0",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "argon2": "^0.45.1",
+    "autoprefixer": "^10.6.2",
+    "mongodb": "^7.8.0",
+    "next": "^16.4.3",
+    "postcss": "^8.5.32",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.64.1",
+    "@types/argon2": "^0.14.1",
+    "@types/mongodb": "^4.0.6",
+    "@vitest/ui": "^5.0.5",
+    "dotenv": "^18.0.9",
+    "tsx": "^4.23.15",
+    "vitest": "^5.0.5"
+  }
+}

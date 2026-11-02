@@ -1,0 +1,23 @@
+# 7. Security and Operations
+
+- Use private staff login with server-managed sessions; hash passwords with Argon2id and provision accounts by invitation/admin action.
+- No public admin registration.
+- Verify staff role on every server-side admin operation.
+- Protect pages and API routes; hiding UI controls is not authorisation.
+- Keep `MONGODB_URI`, `SESSION_SECRET` and Paystack secret keys server-only; never use `NEXT_PUBLIC_` for secrets.
+- MongoDB does not provide PostgreSQL-style RLS; enforce tenant/customer privacy and staff roles in every server-side query and mutation.
+- Do not expose customer addresses, phone numbers or order contents through public lookups.
+- Collect only data required to fulfil the service.
+- Do not store payment card details.
+- Verify Paystack transactions server-to-server; compare reference, expected amount in kobo, currency and successful transaction status before marking an order paid.
+- Validate the `x-paystack-signature` webhook header using HMAC-SHA512 over the exact raw request body and `PAYSTACK_SECRET_KEY`; use a timing-safe comparison.
+- Make callback and webhook handling idempotent, since either can arrive first and webhook deliveries can be retried.
+- Never trust the browser redirect, client-provided amount, or client-provided payment status as proof of payment.
+- Keep test and live Paystack keys separate; use test mode for the full acceptance test suite before go-live.
+- Confirm pickup/delivery address and service area before dispatch.
+- Identify and tag garments; record condition and care instructions at collection.
+- Obtain customer approval for extra charges.
+- Record cleaning scope and who supplies materials.
+- Follow chemical labels and never mix incompatible cleaning chemicals.
+- Enable database backups and monitor Vercel/MongoDB Atlas logs.
+- Test index/setup scripts, document validation and role-based access before production.
