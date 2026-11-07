@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb/client";
 import { LaundryOrderRepository } from "@/server/repositories/laundry-orders";
+import { ServiceRepository } from "@/server/repositories/services";
+import { ServicePriceRepository } from "@/server/repositories/service-prices";
 import { PricingService } from "@/server/services/pricing";
 import { laundryOrderSchema } from "@/lib/validation";
 import { generateReference } from "@/lib/reference";
@@ -35,10 +37,9 @@ export async function POST(request: NextRequest) {
 
     const db = await getDb();
     const laundryOrderRepo = new LaundryOrderRepository(db);
-    const pricingService = new PricingService(
-      db.collection("services"),
-      db.collection("service_prices")
-    );
+    const serviceRepo = new ServiceRepository(db);
+    const priceRepo = new ServicePriceRepository(db);
+    const pricingService = new PricingService(serviceRepo, priceRepo);
 
     // Calculate pricing from server-side data
     const { items: processedItems, subtotalKobo, hasFromPrice } =

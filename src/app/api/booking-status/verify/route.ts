@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb/client";
-import { BookingRepository } from "@/server/repositories/bookings";
-import { LaundryOrderRepository } from "@/server/repositories/laundry-orders";
+import { BookingRepository, Booking } from "@/server/repositories/bookings";
+import { LaundryOrderRepository, LaundryOrder } from "@/server/repositories/laundry-orders";
 import { OtpCodeRepository } from "@/server/repositories/otp-codes";
 
 export const runtime = "nodejs";
@@ -34,12 +34,15 @@ export async function POST(request: NextRequest) {
     const bookingRepo = new BookingRepository(db);
     const laundryRepo = new LaundryOrderRepository(db);
 
-    let record = await bookingRepo.findByReference(reference);
+    let record: Booking | LaundryOrder | null = await bookingRepo.findByReference(reference);
     let type = "booking";
 
     if (!record) {
-      record = await laundryRepo.findByReference(reference);
-      type = "laundry_order";
+      const laundryOrder = await laundryRepo.findByReference(reference);
+      if (laundryOrder) {
+        record = laundryOrder;
+        type = "laundry_order";
+      }
     }
 
     if (!record) {
@@ -54,14 +57,14 @@ export async function POST(request: NextRequest) {
       success: true,
       booking: {
         reference: record.reference,
-        serviceType: type === "booking" ? record.serviceType : "LAUNDRY",
+        serviceType: type === "booking" ? (record as Booking).serviceType : "LAUNDRY",
         status: record.status,
         customerName: record.customerName,
         createdAt: record.createdAt,
         // Include pricing info if available
         ...(type === "booking"
-          ? { estimatedTotalKobo: record.estimatedTotalKobo }
-          : { totalKobo: record.totalKobo }),
+          ? { estimatedTotalKobo: (record as Booking).estimatedTotalKobo }
+          : { totalKobo: (record as LaundryOrder).totalKobo }),
       },
     });
   } catch (error: any) {

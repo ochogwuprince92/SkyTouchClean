@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb/client";
 import { BookingRepository } from "@/server/repositories/bookings";
+import { ServiceRepository } from "@/server/repositories/services";
+import { ServicePriceRepository } from "@/server/repositories/service-prices";
 import { PricingService } from "@/server/services/pricing";
 import { cleaningBookingSchema } from "@/lib/validation";
 import { generateReference } from "@/lib/reference";
@@ -11,6 +13,11 @@ export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    
+    // Convert bedroomCount to number if it's a string
+    if (typeof body.bedroomCount === 'string') {
+      body.bedroomCount = parseInt(body.bedroomCount, 10);
+    }
 
     // Honeypot check
     if (body.honeypot) {
@@ -35,10 +42,9 @@ export async function POST(request: NextRequest) {
 
     const db = await getDb();
     const bookingRepo = new BookingRepository(db);
-    const pricingService = new PricingService(
-      db.collection("services"),
-      db.collection("service_prices")
-    );
+    const serviceRepo = new ServiceRepository(db);
+    const priceRepo = new ServicePriceRepository(db);
+    const pricingService = new PricingService(serviceRepo, priceRepo);
 
     // Calculate pricing from server-side data
     const { priceKobo, includedVisits } = await pricingService.calculateCleaningPrice(

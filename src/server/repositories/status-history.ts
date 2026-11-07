@@ -2,8 +2,12 @@ import { Db, ObjectId } from "mongodb";
 
 export interface StatusHistory {
   _id?: ObjectId;
+  entityType?: string;
+  entityId?: ObjectId;
   bookingId?: ObjectId;
   laundryOrderId?: ObjectId;
+  fromStatus?: string;
+  toStatus?: string;
   oldStatus?: string;
   newStatus: string;
   changedBy: ObjectId | "SYSTEM";

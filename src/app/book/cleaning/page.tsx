@@ -69,10 +69,14 @@ export default function CleaningBooking() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      const submissionData = {
+        ...formData,
+        bedroomCount: parseInt(formData.bedroomCount),
+      };
       const response = await fetch("/api/bookings/cleaning", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submissionData),
       });
 
       const data = await response.json();

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb/client";
-import { BookingRepository } from "@/server/repositories/bookings";
-import { LaundryOrderRepository } from "@/server/repositories/laundry-orders";
+import { BookingRepository, Booking } from "@/server/repositories/bookings";
+import { LaundryOrderRepository, LaundryOrder } from "@/server/repositories/laundry-orders";
 import { requireAuthMiddleware } from "@/lib/middleware";
 import { getSession } from "@/lib/auth";
 import { ObjectId } from "mongodb";
@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check auth - both ADMIN and STAFF can view
@@ -20,23 +20,26 @@ export async function GET(
     const session = await getSession();
     const userRole = session?.role;
 
+    const { id } = await params;
+
     const db = await getDb();
     const bookingRepo = new BookingRepository(db);
     const laundryRepo = new LaundryOrderRepository(db);
 
-    const id = params.id;
-
     // Try to find as booking
-    let booking = await bookingRepo.findById(new ObjectId(id));
+    let order: Booking | LaundryOrder | null = await bookingRepo.findById(new ObjectId(id));
     let type = "booking";
 
     // If not found, try as laundry order
-    if (!booking) {
-      booking = await laundryRepo.findById(new ObjectId(id));
-      type = "laundry_order";
+    if (!order) {
+      const laundryOrder = await laundryRepo.findById(new ObjectId(id));
+      if (laundryOrder) {
+        order = laundryOrder;
+        type = "laundry_order";
+      }
     }
 
-    if (!booking) {
+    if (!order) {
       return NextResponse.json(
         { error: "Booking/order not found" },
         { status: 404 }
@@ -49,23 +52,23 @@ export async function GET(
     if (userRole === "STAFF") {
       // Limited view for STAFF
       const limitedData: any = {
-        reference: booking.reference,
-        status: booking.status,
-        customerName: booking.customerName,
-        phone: booking.phone,
-        createdAt: booking.createdAt,
+        reference: order.reference,
+        status: order.status,
+        customerName: order.customerName,
+        phone: order.phone,
+        createdAt: order.createdAt,
       };
 
       if (type === "booking") {
-        limitedData.serviceType = booking.serviceType;
-        limitedData.preferredDate = booking.preferredDate;
-        limitedData.preferredTime = booking.preferredTime;
-        limitedData.estimatedTotalKobo = booking.estimatedTotalKobo;
+        limitedData.serviceType = (order as Booking).serviceType;
+        limitedData.preferredDate = (order as Booking).preferredDate;
+        limitedData.preferredTime = (order as Booking).preferredTime;
+        limitedData.estimatedTotalKobo = (order as Booking).estimatedTotalKobo;
       } else {
         limitedData.serviceType = "LAUNDRY";
-        limitedData.preferredPickupDate = booking.preferredPickupDate;
-        limitedData.preferredPickupTime = booking.preferredPickupTime;
-        limitedData.totalKobo = booking.totalKobo;
+        limitedData.preferredPickupDate = (order as LaundryOrder).preferredPickupDate;
+        limitedData.preferredPickupTime = (order as LaundryOrder).preferredPickupTime;
+        limitedData.totalKobo = (order as LaundryOrder).totalKobo;
       }
 
       return NextResponse.json({
@@ -77,7 +80,7 @@ export async function GET(
     // ADMIN sees full details
     return NextResponse.json({
       success: true,
-      booking,
+      booking: order,
     });
   } catch (error: any) {
     console.error("View booking error:", error);

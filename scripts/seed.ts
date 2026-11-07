@@ -1,11 +1,33 @@
 import "dotenv/config";
-import { getDb } from "../src/lib/mongodb/client";
+import { MongoClient, Db } from "mongodb";
 import { ServiceRepository } from "../src/server/repositories/services";
 import { ServicePriceRepository } from "../src/server/repositories/service-prices";
 import { StaffRepository } from "../src/server/repositories/staff";
 import argon2 from "argon2";
 
 export const runtime = "nodejs";
+
+// Direct MongoDB connection for seed script (bypasses Next.js server context check)
+let client: MongoClient | null = null;
+let db: Db | null = null;
+
+async function getDb(): Promise<Db> {
+  if (!db) {
+    const uri = process.env.MONGODB_URI || "";
+    client = new MongoClient(uri);
+    await client.connect();
+    db = client.db(process.env.MONGODB_DB || "skytouchclean");
+  }
+  return db;
+}
+
+async function closeDb(): Promise<void> {
+  if (client) {
+    await client.close();
+    client = null;
+    db = null;
+  }
+}
 
 // Seed data from docs/02 exactly (amounts in kobo)
 const SERVICES = [
@@ -228,6 +250,7 @@ async function seed() {
     console.log("\nSkipping admin seed (ADMIN_EMAIL and ADMIN_PASSWORD not set)");
   }
 
+  await closeDb();
   console.log("\n✅ Database seeded successfully");
 }
 

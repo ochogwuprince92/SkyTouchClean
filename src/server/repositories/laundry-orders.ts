@@ -1,4 +1,5 @@
 import { Db, ObjectId } from "mongodb";
+import { BaseOrder } from "./bookings";
 
 export interface LaundryItem {
   itemCode: string;
@@ -9,27 +10,16 @@ export interface LaundryItem {
   itemNotes?: string;
 }
 
-export interface LaundryOrder {
-  _id?: ObjectId;
-  reference: string;
-  customerName: string;
-  phone: string;
-  email: string;
+export interface LaundryOrder extends BaseOrder {
   pickupAddress: string;
   deliveryAddress: string;
   preferredPickupDate: string;
   preferredPickupTime: string;
   pickupDeliveryFeeKobo: number;
-  status: string;
-  paymentStatus: "NOT_REQUIRED" | "UNPAID" | "PENDING" | "PAID" | "FAILED";
   items: LaundryItem[];
   subtotalKobo: number;
   additionalChargeKobo: number;
   totalKobo: number;
-  customerNotes?: string;
-  internalNotes?: Array<{ note: string; createdAt: Date }>;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export class LaundryOrderRepository {

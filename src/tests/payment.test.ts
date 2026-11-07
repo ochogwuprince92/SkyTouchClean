@@ -243,8 +243,8 @@ describe("PaymentService Tests with Mocked Paystack", () => {
     it("should reject webhook with invalid signature (handled in webhook route)", () => {
       // This is tested in the webhook route, not in reconcilePayment
       // Signature validation happens before reconcilePayment is called
-      const signature = "invalid_signature";
-      const expectedSignature = "valid_signature";
+      const signature = "invalid" as string;
+      const expectedSignature = "valid" as string;
       const isValid = signature === expectedSignature;
       expect(isValid).toBe(false);
     });

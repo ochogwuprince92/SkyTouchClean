@@ -70,23 +70,23 @@ describe("Authentication & Authorization Tests", () => {
 
   describe("403 Forbidden Tests", () => {
     it("should reject non-admin users from admin-only endpoints", () => {
-      const userRole = "STAFF";
-      const requiredRole = "ADMIN";
+      const userRole = "STAFF" as string;
+      const requiredRole = "ADMIN" as string;
       const hasAccess = userRole === requiredRole;
       expect(hasAccess).toBe(false);
       // In real implementation, this would return 403
     });
 
     it("should allow admin users to admin-only endpoints", () => {
-      const userRole = "ADMIN";
-      const requiredRole = "ADMIN";
+      const userRole = "ADMIN" as string;
+      const requiredRole = "ADMIN" as string;
       const hasAccess = userRole === requiredRole;
       expect(hasAccess).toBe(true);
     });
 
     it("should allow both ADMIN and STAFF to general protected endpoints", () => {
-      const userRole = "STAFF";
-      const allowedRoles = ["ADMIN", "STAFF"];
+      const userRole = "STAFF" as string;
+      const allowedRoles = ["ADMIN" as string, "STAFF" as string];
       const hasAccess = allowedRoles.includes(userRole);
       expect(hasAccess).toBe(true);
     });

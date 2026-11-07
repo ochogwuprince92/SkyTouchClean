@@ -12,7 +12,7 @@ export interface Service {
 }
 
 export class ServiceRepository {
-  private collection;
+  collection: any;
 
   constructor(db: Db) {
     this.collection = db.collection<Service>("services");

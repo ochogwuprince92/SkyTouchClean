@@ -1,25 +1,28 @@
 import { Db, ObjectId } from "mongodb";
 
-export interface Booking {
+export interface BaseOrder {
   _id?: ObjectId;
   reference: string;
-  serviceType: "HOME_CLEANING" | "FUMIGATION";
   customerName: string;
   phone: string;
   email: string;
-  address: string;
-  preferredDate: string;
-  preferredTime: string;
   status: string;
   paymentStatus: "NOT_REQUIRED" | "UNPAID" | "PENDING" | "PAID" | "FAILED";
-  estimatedTotalKobo?: number;
-  finalTotalKobo?: number;
   customerNotes?: string;
-  materialsOption: "CUSTOMER_PROVIDES" | "SKYTOUCH_PROVIDES";
-  details: any;
   internalNotes?: Array<{ note: string; createdAt: Date }>;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface Booking extends BaseOrder {
+  serviceType: "HOME_CLEANING" | "FUMIGATION";
+  address: string;
+  preferredDate: string;
+  preferredTime: string;
+  estimatedTotalKobo?: number;
+  finalTotalKobo?: number;
+  materialsOption: "CUSTOMER_PROVIDES" | "SKYTOUCH_PROVIDES";
+  details: any;
 }
 
 export class BookingRepository {

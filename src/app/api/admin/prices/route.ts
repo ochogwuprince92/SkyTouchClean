@@ -57,23 +57,29 @@ export async function POST(request: NextRequest) {
     const priceRepo = new ServicePriceRepository(db);
     const statusHistoryRepo = new StatusHistoryRepository(db);
 
+    // Convert serviceId to ObjectId if it's a string
+    const serviceObjectId = typeof serviceId === 'string' ? new ObjectId(serviceId) : serviceId;
+
     // Deactivate any existing active prices for this serviceId/itemCode combination
-    await priceRepo.deactivatePreviousPrices(new ObjectId(serviceId), itemCode);
+    await priceRepo.deactivatePreviousPrices(serviceObjectId, itemCode);
 
     // Create new price
     const priceId = await priceRepo.create({
-      serviceId: new ObjectId(serviceId),
+      serviceId: serviceObjectId,
       itemCode,
       label,
       unit,
       amountKobo,
       isFromPrice: isFromPrice || false,
+      isActive: true,
       effectiveFrom: new Date(),
     });
 
     // Get session for audit trail
     const session = await getSession();
-    const changedBy = session?.staffId || new ObjectId("507f1f77bcf86cd799439011"); // Fallback to system ID
+    const changedBy: ObjectId | "SYSTEM" = session?.staffId
+      ? new ObjectId(session.staffId)
+      : new ObjectId("507f1f77bcf86cd799439011"); // Fallback to system ID
 
     // Audit log
     await statusHistoryRepo.create({
@@ -81,8 +87,9 @@ export async function POST(request: NextRequest) {
       entityId: priceId,
       fromStatus: "NEW",
       toStatus: "ACTIVE",
+      newStatus: "ACTIVE",
       changedBy,
-      notes: `Created price: ${label} - ₦${(amountKobo / 100).toFixed(2)}`,
+      note: `Created price: ${label} - ₦${(amountKobo / 100).toFixed(2)}`,
     });
 
     return NextResponse.json({
@@ -110,17 +117,17 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{}> }
 ) {
   try {
     await requireAdmin();
 
     const body = await request.json();
-    const { label, unit, amountKobo, isFromPrice, isActive } = body;
+    const { id, label, unit, amountKobo, isFromPrice, isActive } = body;
 
-    if (!label && unit === undefined && amountKobo === undefined && isActive === undefined) {
+    if (!id || (!label && unit === undefined && amountKobo === undefined && isActive === undefined)) {
       return NextResponse.json(
-        { error: "At least one field to update is required" },
+        { error: "ID and at least one field to update are required" },
         { status: 400 }
       );
     }
@@ -128,9 +135,7 @@ export async function PATCH(
     const db = await getDb();
     const priceRepo = new ServicePriceRepository(db);
     const statusHistoryRepo = new StatusHistoryRepository(db);
-
-    const id = params.id;
-    const existingPrice = await priceRepo.findById(new ObjectId(id));
+    const existingPrice = await priceRepo.findById(typeof id === 'string' ? new ObjectId(id) : id);
 
     if (!existingPrice) {
       return NextResponse.json(
@@ -153,11 +158,13 @@ export async function PATCH(
     }
 
     // Update price
-    await priceRepo.update(new ObjectId(id), updateData);
+    await priceRepo.update(typeof id === 'string' ? new ObjectId(id) : id, updateData);
 
     // Get session for audit trail
     const session = await getSession();
-    const changedBy = session?.staffId || new ObjectId("507f1f77bcf86cd799439011"); // Fallback to system ID
+    const changedBy: ObjectId | "SYSTEM" = session?.staffId
+      ? new ObjectId(session.staffId)
+      : new ObjectId("507f1f77bcf86cd799439011"); // Fallback to system ID
 
     // Audit log
     await statusHistoryRepo.create({
@@ -165,8 +172,9 @@ export async function PATCH(
       entityId: new ObjectId(id),
       fromStatus: existingPrice.isActive ? "ACTIVE" : "INACTIVE",
       toStatus: isActive !== undefined ? (isActive ? "ACTIVE" : "INACTIVE") : (existingPrice.isActive ? "ACTIVE" : "INACTIVE"),
+      newStatus: isActive !== undefined ? (isActive ? "ACTIVE" : "INACTIVE") : (existingPrice.isActive ? "ACTIVE" : "INACTIVE"),
       changedBy,
-      notes: `Updated price: ${existingPrice.label}`,
+      note: `Updated price: ${existingPrice.label}`,
     });
 
     return NextResponse.json({

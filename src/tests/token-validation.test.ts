@@ -17,8 +17,8 @@ describe("Token and Code Validation Tests", () => {
     });
 
     it("should reject tokens with wrong type", () => {
-      const tokenType = "INVITE";
-      const expectedType = "PASSWORD_RESET";
+      const tokenType = "type_a" as string;
+      const expectedType = "type_b" as string;
       const isWrongType = tokenType !== expectedType;
       expect(isWrongType).toBe(true);
     });
@@ -50,15 +50,15 @@ describe("Token and Code Validation Tests", () => {
     });
 
     it("should reject wrong OTP codes", () => {
-      const storedOtp = "123456";
-      const providedOtp = "654321";
+      const storedOtp = "000000" as string;
+      const providedOtp = "111111" as string;
       const isWrong = storedOtp !== providedOtp;
       expect(isWrong).toBe(true);
     });
 
     it("should reject OTP codes for wrong reference", () => {
-      const storedReference = "STC-LAU-ABC12345";
-      const providedReference = "STC-LAU-XYZ67890";
+      const storedReference = "REF_A" as string;
+      const providedReference = "REF_B" as string;
       const isWrongReference = storedReference !== providedReference;
       expect(isWrongReference).toBe(true);
     });

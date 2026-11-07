@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb/client";
-import { BookingRepository } from "@/server/repositories/bookings";
-import { LaundryOrderRepository } from "@/server/repositories/laundry-orders";
+import { BookingRepository, Booking } from "@/server/repositories/bookings";
+import { LaundryOrderRepository, LaundryOrder } from "@/server/repositories/laundry-orders";
 import { OtpCodeRepository } from "@/server/repositories/otp-codes";
 import { checkRateLimit, getIdentifier } from "@/lib/rate-limit";
 import { getEmailProvider } from "@/lib/email";
@@ -36,12 +36,15 @@ export async function POST(request: NextRequest) {
     const otpRepo = new OtpCodeRepository(db);
 
     // Find booking or order by reference
-    let record = await bookingRepo.findByReference(reference);
+    let record: Booking | LaundryOrder | null = await bookingRepo.findByReference(reference);
     let type = "booking";
 
     if (!record) {
-      record = await laundryRepo.findByReference(reference);
-      type = "laundry_order";
+      const laundryOrder = await laundryRepo.findByReference(reference);
+      if (laundryOrder) {
+        record = laundryOrder;
+        type = "laundry_order";
+      }
     }
 
     let shouldSendOtp = false;

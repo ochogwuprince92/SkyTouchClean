@@ -38,7 +38,7 @@ SkyTouchClean is a comprehensive service management platform that allows custome
 - **Anti-Enumeration** - OTP flow prevents email enumeration via timing attacks
 - **Price Manipulation Prevention** - Single active price per service/item combination
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Frontend
 - **Next.js 16** - React framework with App Router
@@ -115,7 +115,7 @@ SkyTouchClean/
 └── docs/                      # Additional documentation
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -324,4 +324,4 @@ Proprietary - All rights reserved to SkyTouchClean.
 
 ---
 
-**Built with ❤️ for SkyTouchClean**
+**Built for SkyTouchClean**

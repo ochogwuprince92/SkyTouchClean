@@ -62,7 +62,7 @@ describe("Security Tests", () => {
     });
 
     it("should not leak customer data after OTP verification (limited info only)", () => {
-      const booking = {
+      const booking: any = {
         reference: "STC-LAU-ABC12345",
         customerName: "John Doe",
         phone: "08012345678",
@@ -70,6 +70,7 @@ describe("Security Tests", () => {
         address: "123 Main St",
         status: "PENDING_REVIEW",
         totalKobo: 100000,
+        createdAt: new Date(),
       };
 
       // After OTP, should return limited info
@@ -114,11 +115,11 @@ describe("Security Tests", () => {
 
       // Public pricing API is OK (it's a catalogue)
       // But admin pricing management should be protected
-      const adminPriceResponse = isAuthenticated ? prices : { error: "Unauthorized" };
+      const adminPriceResponse: any = isAuthenticated ? prices : { error: "Unauthorized" };
 
       if (!isAuthenticated) {
         expect(adminPriceResponse).toHaveProperty("error");
-        expect(adminPriceResponse.error).toBe("Unauthorized");
+        expect((adminPriceResponse as { error: string }).error).toBe("Unauthorized");
       }
     });
 

@@ -20,7 +20,13 @@ export async function POST(request: NextRequest) {
 
     // Verify signature
     const secretKey = process.env.PAYSTACK_SECRET_KEY;
-    const hmac = crypto.createHmac("sha512", secretKey);
+    if (!secretKey) {
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+    const hmac = crypto.createHmac("sha512", secretKey as string);
     hmac.update(rawBody);
     const expectedSignature = hmac.digest("hex");
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb/client";
-import { BookingRepository } from "@/server/repositories/bookings";
-import { LaundryOrderRepository } from "@/server/repositories/laundry-orders";
+import { BookingRepository, Booking } from "@/server/repositories/bookings";
+import { LaundryOrderRepository, LaundryOrder } from "@/server/repositories/laundry-orders";
 import { StatusHistoryRepository } from "@/server/repositories/status-history";
 import { requireAdminMiddleware } from "@/lib/middleware";
 import { getSession } from "@/lib/auth";
@@ -12,13 +12,14 @@ export const runtime = "nodejs";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check auth - require ADMIN role
     const authError = await requireAdminMiddleware(request);
     if (authError) return authError;
 
+    const { id } = await params;
     const body = await request.json();
     const { status, internalNote, additionalChargeKobo, additionalChargeReason } = body;
 
@@ -67,19 +68,20 @@ export async function PATCH(
     const laundryRepo = new LaundryOrderRepository(db);
     const statusHistoryRepo = new StatusHistoryRepository(db);
 
-    const id = params.id;
-
     // Try to find as booking
-    let booking = await bookingRepo.findById(new ObjectId(id));
+    let order: Booking | LaundryOrder | null = await bookingRepo.findById(new ObjectId(id));
     let type = "booking";
 
     // If not found, try as laundry order
-    if (!booking) {
-      booking = await laundryRepo.findById(new ObjectId(id));
-      type = "laundry_order";
+    if (!order) {
+      const laundryOrder = await laundryRepo.findById(new ObjectId(id));
+      if (laundryOrder) {
+        order = laundryOrder;
+        type = "laundry_order";
+      }
     }
 
-    if (!booking) {
+    if (!order) {
       return NextResponse.json(
         { error: "Booking/order not found" },
         { status: 404 }
@@ -87,19 +89,18 @@ export async function PATCH(
     }
 
     // Validate status transition
-    const currentStatus = booking.status;
-    if (!isValidTransition(currentStatus, status)) {
+    const currentStatus = order.status;
+    if (!isValidTransition(currentStatus as any, status as any)) {
       return NextResponse.json(
         {
           error: `Invalid status transition from ${currentStatus} to ${status}`,
-          allowedTransitions: require("./state-machine").STATE_TRANSITIONS[currentStatus],
         },
         { status: 409 }
       );
     }
 
     // Check if current state is terminal
-    if (isTerminalState(currentStatus)) {
+    if (isTerminalState(currentStatus as any)) {
       return NextResponse.json(
         { error: `Cannot modify ${currentStatus} booking` },
         { status: 422 }
@@ -119,14 +120,14 @@ export async function PATCH(
       if (type === "booking") {
         updatedData.additionalChargeKobo = additionalChargeKobo;
         updatedData.details = {
-          ...booking.details,
+          ...(order as Booking).details,
           additionalChargeReason,
         };
         updatedData.estimatedTotalKobo =
-          (booking.estimatedTotalKobo || 0) + additionalChargeKobo;
+          ((order as Booking).estimatedTotalKobo || 0) + additionalChargeKobo;
       } else {
         updatedData.additionalChargeKobo = additionalChargeKobo;
-        updatedData.totalKobo = (booking.totalKobo || 0) + additionalChargeKobo;
+        updatedData.totalKobo = ((order as LaundryOrder).totalKobo || 0) + additionalChargeKobo;
       }
 
       // If extra charge added, move to AWAITING_CUSTOMER_CONFIRMATION
@@ -137,17 +138,10 @@ export async function PATCH(
 
     // Add internal note
     if (internalNote) {
-      if (type === "booking") {
-        updatedData.internalNotes = [
-          ...(booking.internalNotes || []),
-          { note: internalNote, createdAt: new Date() },
-        ];
-      } else {
-        updatedData.internalNotes = [
-          ...(booking.internalNotes || []),
-          { note: internalNote, createdAt: new Date() },
-        ];
-      }
+      updatedData.internalNotes = [
+        ...(order.internalNotes || []),
+        { note: internalNote, createdAt: new Date() },
+      ];
     }
 
     // Update booking/order
@@ -159,7 +153,9 @@ export async function PATCH(
 
     // Get session for audit trail
     const session = await getSession();
-    const changedBy = session?.staffId || new ObjectId("507f1f77bcf86cd799439011"); // Fallback to system ID
+    const changedBy: ObjectId | "SYSTEM" = session?.staffId
+      ? new ObjectId(session.staffId)
+      : new ObjectId("507f1f77bcf86cd799439011"); // Fallback to system ID
 
     // Record status history
     await statusHistoryRepo.create({
@@ -167,8 +163,9 @@ export async function PATCH(
       entityId: new ObjectId(id),
       fromStatus: currentStatus,
       toStatus: updatedData.status,
+      newStatus: updatedData.status,
       changedBy,
-      notes: internalNote || additionalChargeReason || "",
+      note: internalNote || additionalChargeReason || "",
     });
 
     return NextResponse.json({
