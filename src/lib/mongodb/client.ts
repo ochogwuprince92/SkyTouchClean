@@ -13,8 +13,10 @@ export async function getMongoClient(): Promise<MongoClient> {
     client = new MongoClient(env.MONGODB_URI, {
       maxPoolSize: 10,
       minPoolSize: 2,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
+      tls: true,
+      tlsAllowInvalidCertificates: false,
     });
   }
 

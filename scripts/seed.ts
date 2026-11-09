@@ -1,4 +1,7 @@
 import "dotenv/config";
+import { config as loadEnv } from "dotenv";
+
+loadEnv({ path: ".env.local", override: false });
 import { MongoClient, Db } from "mongodb";
 import { ServiceRepository } from "../src/server/repositories/services";
 import { ServicePriceRepository } from "../src/server/repositories/service-prices";

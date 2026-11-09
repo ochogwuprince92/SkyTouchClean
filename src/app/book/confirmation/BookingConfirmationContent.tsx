@@ -53,10 +53,22 @@ export default function BookingConfirmationContent() {
         </div>
       </div>
 
+      <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-8">
+        <p className="text-sm text-yellow-800">
+          <strong>Pay Now:</strong> Complete your payment securely to confirm your booking immediately.
+        </p>
+      </div>
+
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <Link
-          href="/status"
+          href={`/status?ref=${reference}`}
           className="bg-teal text-white px-6 py-3 rounded-md font-semibold hover:bg-teal-700 transition-colors"
+        >
+          Pay Now
+        </Link>
+        <Link
+          href="/status"
+          className="px-6 py-3 rounded-md font-semibold hover:bg-gray-100 transition-colors border border-gray-300"
         >
           Check Status
         </Link>

@@ -7,6 +7,7 @@ import { PricingService } from "@/server/services/pricing";
 import { fumigationBookingSchema } from "@/lib/validation";
 import { generateReference } from "@/lib/reference";
 import { checkRateLimit, getIdentifier } from "@/lib/rate-limit";
+import { getEmailProvider } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -70,6 +71,48 @@ export async function POST(request: NextRequest) {
       },
       customerNotes: validatedData.customerNotes,
     });
+
+    // Send confirmation email
+    try {
+      const emailProvider = getEmailProvider();
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+      
+      await emailProvider.send({
+        to: validatedData.email,
+        subject: "SkyTouchClean - Fumigation Booking Received",
+        html: `
+          <h2>Booking Received!</h2>
+          <p>Dear ${validatedData.customerName},</p>
+          <p>Your fumigation booking request has been successfully submitted.</p>
+          
+          <div style="background-color: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px;">
+            <h3 style="margin-top: 0;">Booking Details</h3>
+            <p><strong>Reference:</strong> ${reference}</p>
+            <p><strong>Service:</strong> Fumigation</p>
+            <p><strong>Property Type:</strong> ${validatedData.propertyType}</p>
+            <p><strong>Property Size:</strong> ${validatedData.propertySize}</p>
+            <p><strong>Pest Problem:</strong> ${validatedData.pestProblem}</p>
+            <p><strong>Preferred Date:</strong> ${validatedData.preferredDate}</p>
+            <p><strong>Address:</strong> ${validatedData.address}</p>
+          </div>
+          
+          <p><strong>Important:</strong> Fumigation services require an on-site assessment to provide an accurate quote. Our team will contact you to schedule the assessment and provide a detailed quote.</p>
+          <p>You can check your booking status anytime using your reference number.</p>
+          
+          <p>
+            <a href="${siteUrl}/status" style="background-color: #14b8a6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">Check Booking Status</a>
+          </p>
+          
+          <p style="margin-top: 30px; font-size: 12px; color: #666;">
+            If you did not make this booking, please ignore this email.
+          </p>
+        `,
+        text: `Booking Received!\n\nDear ${validatedData.customerName},\n\nYour fumigation booking request has been successfully submitted.\n\nReference: ${reference}\nService: Fumigation\nProperty Type: ${validatedData.propertyType}\nProperty Size: ${validatedData.propertySize}\nPest Problem: ${validatedData.pestProblem}\nPreferred Date: ${validatedData.preferredDate}\nAddress: ${validatedData.address}\n\nImportant: Fumigation services require an on-site assessment to provide an accurate quote. Our team will contact you to schedule the assessment and provide a detailed quote.\n\nCheck your booking status at: ${siteUrl}/status`,
+      });
+    } catch (emailError) {
+      // Log email error but don't fail the booking
+      console.error("Failed to send confirmation email:", emailError);
+    }
 
     return NextResponse.json({
       success: true,

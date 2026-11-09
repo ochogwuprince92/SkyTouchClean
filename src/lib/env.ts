@@ -13,11 +13,15 @@ const envSchema = z.object({
   NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY: z.string().min(1, "Paystack public key is required"),
   NEXT_PUBLIC_SITE_URL: z.string().url("Invalid site URL"),
 
-  // Email (optional for now)
-  EMAIL_PROVIDER: z.enum(["resend", "sendgrid"]).optional(),
+  // Email - Brevo (optional - if not set, console adapter will be used)
+  BREVO_API_KEY: z.string().optional(),
+  BREVO_API_URL: z.string().optional(),
+  BREVO_SENDER_NAME: z.string().optional(),
+  BREVO_SENDER_EMAIL: z.string().optional(),
+
+  // Email - Resend (alternative, optional)
   RESEND_API_KEY: z.string().optional(),
-  SENDGRID_API_KEY: z.string().optional(),
-  SENDGRID_FROM_EMAIL: z.string().email().optional(),
+  RESEND_FROM_EMAIL: z.string().optional(),
 
   // First admin (for seed)
   ADMIN_EMAIL: z.string().email().optional(),
@@ -25,7 +29,18 @@ const envSchema = z.object({
   ADMIN_NAME: z.string().optional(),
 });
 
-const _env = envSchema.safeParse(process.env);
+// For build time, use defaults for optional vars if not set
+const buildEnv = {
+  ...process.env,
+  BREVO_API_KEY: process.env.BREVO_API_KEY || "",
+  BREVO_API_URL: process.env.BREVO_API_URL || "",
+  BREVO_SENDER_NAME: process.env.BREVO_SENDER_NAME || "",
+  BREVO_SENDER_EMAIL: process.env.BREVO_SENDER_EMAIL || "",
+  RESEND_API_KEY: process.env.RESEND_API_KEY || "",
+  RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || "",
+};
+
+const _env = envSchema.safeParse(buildEnv);
 
 if (!_env.success) {
   console.error("❌ Invalid environment variables:");

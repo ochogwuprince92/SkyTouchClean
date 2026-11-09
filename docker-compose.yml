@@ -1,0 +1,64 @@
+services:
+  mongo:
+    image: mongo:8
+    container_name: skytouch-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-changeme}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-skytouchclean}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  app:
+    build:
+      context: .
+      args:
+        MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-changeme}@mongo:27017/${MONGO_INITDB_DATABASE:-skytouchclean}?authSource=admin
+        MONGODB_DB: ${MONGO_INITDB_DATABASE:-skytouchclean}
+        SESSION_SECRET: ${SESSION_SECRET:-default-session-secret-for-build-min-32-chars-long}
+        PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY:-sk_test_default}
+        NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY: ${NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY:-pk_test_default}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+        BREVO_API_KEY: ${BREVO_API_KEY:-}
+        BREVO_API_URL: ${BREVO_API_URL:-https://api.brevo.com/v3/smtp/email}
+        BREVO_SENDER_NAME: ${BREVO_SENDER_NAME:-SkyTouch}
+        BREVO_SENDER_EMAIL: ${BREVO_SENDER_EMAIL:-noreply@localhost}
+        RESEND_API_KEY: ${RESEND_API_KEY:-}
+        RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-noreply@localhost}
+    container_name: skytouch-app
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    env_file:
+      - path: .env.local
+        required: false
+    environment:
+      # Override the Atlas URI from .env.local with the in-network mongo service
+      MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-changeme}@mongo:27017/${MONGO_INITDB_DATABASE:-skytouchclean}?authSource=admin
+      MONGODB_DB: ${MONGO_INITDB_DATABASE:-skytouchclean}
+      SESSION_SECRET: ${SESSION_SECRET:-default-session-secret-for-build-min-32-chars-long}
+      PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY:-sk_test_default}
+      NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY: ${NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY:-pk_test_default}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
+      BREVO_API_URL: ${BREVO_API_URL:-https://api.brevo.com/v3/smtp/email}
+      BREVO_SENDER_NAME: ${BREVO_SENDER_NAME:-SkyTouch}
+      BREVO_SENDER_EMAIL: ${BREVO_SENDER_EMAIL:-noreply@localhost}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme123}
+      ADMIN_NAME: ${ADMIN_NAME:-Admin User}
+    ports:
+      - "3000:3000"
+
+volumes:
+  mongo_data:
