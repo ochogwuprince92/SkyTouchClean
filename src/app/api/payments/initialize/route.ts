@@ -11,11 +11,12 @@ export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { orderType, orderId, otp } = body;
+    const { orderType, orderId: providedOrderId, reference: orderReference, otp } = body;
+    let orderId = providedOrderId;
 
-    if (!orderType || !orderId || !otp) {
+    if (!otp || (!orderId && !orderReference)) {
       return NextResponse.json(
-        { error: "Order type, order ID, and OTP are required" },
+        { error: "Order ID or reference, and OTP are required" },
         { status: 400 }
       );
     }
@@ -28,10 +29,26 @@ export async function POST(request: NextRequest) {
     const laundryRepo = new LaundryOrderRepository(db);
 
     let order: any;
+    let resolvedOrderType: string;
     let amountKobo: number;
     let email: string;
 
-    if (orderType === "booking") {
+    if (orderReference) {
+      order = await bookingRepo.findByReference(orderReference);
+      resolvedOrderType = "booking";
+      if (!order) {
+        order = await laundryRepo.findByReference(orderReference);
+        resolvedOrderType = "laundry_order";
+      }
+      if (!order) {
+        return NextResponse.json(
+          { error: "Order not found" },
+          { status: 404 }
+        );
+      }
+      orderId = order._id;
+    } else if (orderType === "booking") {
+      resolvedOrderType = "booking";
       order = await bookingRepo.findById(new ObjectId(orderId));
       if (!order) {
         return NextResponse.json(
@@ -39,9 +56,8 @@ export async function POST(request: NextRequest) {
           { status: 404 }
         );
       }
-      amountKobo = order.estimatedTotalKobo || 0;
-      email = order.email;
     } else {
+      resolvedOrderType = "laundry_order";
       order = await laundryRepo.findById(new ObjectId(orderId));
       if (!order) {
         return NextResponse.json(
@@ -49,9 +65,12 @@ export async function POST(request: NextRequest) {
           { status: 404 }
         );
       }
-      amountKobo = order.totalKobo || 0;
-      email = order.email;
     }
+
+    amountKobo = resolvedOrderType === "booking"
+      ? order.estimatedTotalKobo || 0
+      : order.totalKobo || 0;
+    email = order.email;
 
     // Verify OTP using the order reference
     const isValid = await otpRepo.verify(order.reference, otp);
@@ -81,7 +100,7 @@ export async function POST(request: NextRequest) {
     // Initialize payment
     const paymentService = new PaymentService(db);
     const { reference, authorizationUrl } = await paymentService.initializePayment(
-      orderType as any,
+      resolvedOrderType as any,
       new ObjectId(orderId),
       amountKobo,
       email

@@ -15,8 +15,7 @@ export async function getMongoClient(): Promise<MongoClient> {
       minPoolSize: 2,
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
-      tls: true,
-      tlsAllowInvalidCertificates: false,
+      tls: env.MONGODB_URI.startsWith("mongodb+srv://"),
     });
   }
 

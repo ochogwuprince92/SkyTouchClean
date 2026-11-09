@@ -61,7 +61,7 @@ export default function BookingConfirmationContent() {
 
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <Link
-          href={`/status?ref=${reference}`}
+          href={`/pay?ref=${reference}`}
           className="bg-teal text-white px-6 py-3 rounded-md font-semibold hover:bg-teal-700 transition-colors"
         >
           Pay Now

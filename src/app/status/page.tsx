@@ -10,15 +10,55 @@ export default function BookingStatus() {
   const [reference, setReference] = useState("");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [booking, setBooking] = useState<any>(null);
 
-  const handleRequestOTP = (e: React.FormEvent) => {
+  const handleRequestOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStep("verify");
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/booking-status/otp-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reference, email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to send verification code");
+        return;
+      }
+      setStep("verify");
+    } catch {
+      setError("Failed to send verification code. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleVerifyOTP = (e: React.FormEvent) => {
+  const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStep("result");
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/booking-status/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reference, otp }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Invalid or expired code");
+        return;
+      }
+      setBooking(data.booking);
+      setStep("result");
+    } catch {
+      setError("Verification failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -37,6 +77,9 @@ export default function BookingStatus() {
                 <h2 className="text-2xl font-bold mb-6 text-deep-purple">
                   Enter Your Reference
                 </h2>
+                {error && (
+                  <p className="text-sm text-red-600 mb-4 text-center">{error}</p>
+                )}
                 <form onSubmit={handleRequestOTP} className="space-y-4">
                   <div>
                     <label className="block text-sm font-semibold mb-2">
@@ -66,9 +109,10 @@ export default function BookingStatus() {
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-teal text-white px-6 py-3 rounded-md font-semibold hover:bg-teal-700"
+                    disabled={loading}
+                    className="w-full bg-teal text-white px-6 py-3 rounded-md font-semibold hover:bg-teal-700 disabled:opacity-50"
                   >
-                    Send Verification Code
+                    {loading ? "Sending..." : "Send Verification Code"}
                   </button>
                 </form>
                 <p className="text-sm text-gray-600 mt-4 text-center">
@@ -86,6 +130,9 @@ export default function BookingStatus() {
                 <p className="text-gray-700 mb-6">
                   We've sent a 6-digit code to <strong>{email}</strong>
                 </p>
+                {error && (
+                  <p className="text-sm text-red-600 mb-4 text-center">{error}</p>
+                )}
                 <form onSubmit={handleVerifyOTP} className="space-y-4">
                   <div>
                     <label className="block text-sm font-semibold mb-2">
@@ -103,9 +150,10 @@ export default function BookingStatus() {
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-teal text-white px-6 py-3 rounded-md font-semibold hover:bg-teal-700"
+                    disabled={loading}
+                    className="w-full bg-teal text-white px-6 py-3 rounded-md font-semibold hover:bg-teal-700 disabled:opacity-50"
                   >
-                    Verify & View Status
+                    {loading ? "Verifying..." : "Verify & View Status"}
                   </button>
                 </form>
                 <button
@@ -130,28 +178,43 @@ export default function BookingStatus() {
                 <div className="space-y-4">
                   <div className="bg-deep-purple-50 p-4 rounded-lg">
                     <p className="text-sm text-gray-600">Reference</p>
-                    <p className="text-xl font-bold text-deep-purple">{reference}</p>
+                    <p className="text-xl font-bold text-deep-purple">{booking?.reference}</p>
                   </div>
 
                   <div className="bg-deep-purple-50 p-4 rounded-lg">
                     <p className="text-sm text-gray-600">Status</p>
-                    <p className="text-xl font-bold text-teal">PENDING_REVIEW</p>
+                    <p className="text-xl font-bold text-teal">{booking?.status}</p>
                   </div>
 
                   <div className="bg-deep-purple-50 p-4 rounded-lg">
                     <p className="text-sm text-gray-600">Service Type</p>
-                    <p className="text-lg font-semibold">Laundry Services</p>
+                    <p className="text-lg font-semibold">
+                      {booking?.serviceType === "LAUNDRY" ? "Laundry Services" : booking?.serviceType === "HOME_CLEANING" ? "Home Cleaning" : booking?.serviceType === "FUMIGATION" ? "Fumigation" : booking?.serviceType}
+                    </p>
                   </div>
 
                   <div className="bg-deep-purple-50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-600">Estimated Total</p>
-                    <p className="text-lg font-semibold">₦5,000</p>
+                    <p className="text-sm text-gray-600">Customer</p>
+                    <p className="text-lg font-semibold">{booking?.customerName}</p>
                   </div>
 
-                  <div className="bg-deep-purple-50 p-4 rounded-lg">
-                    <p className="text-sm text-gray-600">Preferred Pickup Date</p>
-                    <p className="text-lg font-semibold">2025-01-15</p>
-                  </div>
+                  {(booking?.estimatedTotalKobo ?? booking?.totalKobo) != null && (
+                    <div className="bg-deep-purple-50 p-4 rounded-lg">
+                      <p className="text-sm text-gray-600">Estimated Total</p>
+                      <p className="text-lg font-semibold">
+                        ₦{((booking.estimatedTotalKobo ?? booking.totalKobo) / 100).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+
+                  {booking?.createdAt && (
+                    <div className="bg-deep-purple-50 p-4 rounded-lg">
+                      <p className="text-sm text-gray-600">Booked On</p>
+                      <p className="text-lg font-semibold">
+                        {new Date(booking.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
