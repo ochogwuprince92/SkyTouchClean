@@ -4,7 +4,7 @@ import { BookingRepository } from "@/server/repositories/bookings";
 import { ServiceRepository } from "@/server/repositories/services";
 import { ServicePriceRepository } from "@/server/repositories/service-prices";
 import { PricingService } from "@/server/services/pricing";
-import { cleaningBookingSchema } from "@/lib/validation";
+import { cleaningBookingSchema, formatZodError } from "@/lib/validation";
 import { generateReference } from "@/lib/reference";
 import { checkRateLimit, getIdentifier } from "@/lib/rate-limit";
 import { getEmailProvider } from "@/lib/email";
@@ -134,8 +134,9 @@ export async function POST(request: NextRequest) {
     console.error("Cleaning booking error:", error);
 
     if (error.name === "ZodError") {
+      const { error: message, details } = formatZodError(error);
       return NextResponse.json(
-        { error: "Validation failed", details: error.errors },
+        { error: message, details },
         { status: 400 }
       );
     }

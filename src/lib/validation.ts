@@ -1,5 +1,21 @@
 import { z } from "zod";
 
+// Format Zod issues into a human-readable message for API responses
+export function formatZodError(error: z.ZodError): {
+  error: string;
+  details: z.core.$ZodIssue[];
+} {
+  const details = error.issues;
+  const messages = details.map((issue) => {
+    const field = issue.path.length > 0 ? `${issue.path.join(".")}: ` : "";
+    return `${field}${issue.message}`;
+  });
+  return {
+    error: `Validation failed: ${messages.join(". ")}`,
+    details,
+  };
+}
+
 // Nigerian phone format: +234 or 0 followed by 10 digits
 const nigerianPhoneRegex = /^(\+234|0)[789]\d{9}$/;
 
