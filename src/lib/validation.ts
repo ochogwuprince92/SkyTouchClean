@@ -6,12 +6,9 @@ export function formatZodError(error: z.ZodError): {
   details: z.core.$ZodIssue[];
 } {
   const details = error.issues;
-  const messages = details.map((issue) => {
-    const field = issue.path.length > 0 ? `${issue.path.join(".")}: ` : "";
-    return `${field}${issue.message}`;
-  });
+  const messages = [...new Set(details.map((issue) => issue.message))];
   return {
-    error: `Validation failed: ${messages.join(". ")}`,
+    error: messages.join(". "),
     details,
   };
 }
